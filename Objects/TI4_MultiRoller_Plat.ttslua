@@ -52,6 +52,8 @@ local ABILITIES = {
     disablePlanetaryShield = "Disables Planetary Shield"
 }
 
+local ABILITIES_NONROLLABLE = {"sustainDamage", "planetaryShield", "disablePlanetaryShield"}
+
 local DICE_COLOR = {
     ["Dreadnought"] = "Purple",
     ["Flagship"] = "Black",
@@ -78,6 +80,8 @@ local _injectExtraUnitUpgrades = false
 local _injectExtraModifiers = false
 local _updateWarnings = false
 
+local _showNonRollableAbilities = true
+
 function onLoad()
     for _, unitType in ipairs(UNIT_TYPES) do
         _unitTypeToCount[unitType] = 0
@@ -87,6 +91,8 @@ function onLoad()
         createUi()
     end
     Wait.time(delayedCreateUi, 0.5)
+    -- Toggle the display of non-rollable abilities !! BROKEN !!
+    -- self.addContextMenuItem("Toggle Extra Abilities", toggleNonRollableAbilities)
 end
 
 function onPlayerConnect(player_id)
@@ -435,6 +441,10 @@ function generateRollerXmlTable(unit_data)
         local unit_stats = unit_data[unit_id] or {}
         table.insert(xmlTable[2]["children"][1]["children"], generateUnitXmlTable(unit_id, unit_stats, color))
     end
+        -- Hide non-rollable abilities if necessary
+    if not _showNonRollableAbilities then 
+        hideNonRollableAbilities()
+    end
     return xmlTable
 end
 
@@ -646,6 +656,32 @@ end
 
 function removeAbility(unit_id, ability_id)
     self.UI.hide(unit_id .. ".ability." .. ability_id)
+end
+
+function toggleNonRollableAbilities()
+    if _showNonRollableAbilities then
+        hideNonRollableAbilities()
+    else
+        showNonRollableAbilities()
+    end
+end
+
+function showNonRollableAbilities()
+    _showNonRollableAbilities = true
+    for _, unit_id in pairs(UNIT_TYPES) do
+        for _, ability_id in pairs(ABILITIES_NONROLLABLE) do
+            showAbility(unit_id, ability_id)
+        end
+    end
+end
+
+function hideNonRollableAbilities()
+    _showNonRollableAbilities = false
+    for _, unit_id in pairs(UNIT_TYPES) do
+        for _, ability_id in pairs(ABILITIES_NONROLLABLE) do
+            removeAbility(unit_id, ability_id)
+        end
+    end
 end
 
 function changeUnitCountXml(player, value, id)
